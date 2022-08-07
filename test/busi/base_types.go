@@ -25,7 +25,7 @@ var BusiConf = dtmcli.DBConf{
 	Driver: "mysql",
 	Host:   StoreHost,
 	Port:   3306,
-	User:   "root",
+	User:   "123",
 }
 
 // UserAccount 1
