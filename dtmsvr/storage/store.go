@@ -17,6 +17,9 @@ var ErrNotFound = errors.New("storage: NotFound")
 // ErrUniqueConflict defines the item is conflict with unique key in storage implement.
 var ErrUniqueConflict = errors.New("storage: UniqueKeyConflict")
 
+// ConcurrentConflict defines the item is conflict with concurrent writes to the same record
+var ConcurrentConflict = errors.New("storage: ConcurrentConflict")
+
 // Store defines storage relevant interface
 type Store interface {
 	Ping() error
@@ -31,4 +34,8 @@ type Store interface {
 	TouchCronTime(global *TransGlobalStore, nextCronInterval int64, nextCronTime *time.Time)
 	LockOneGlobalTrans(expireIn time.Duration) *TransGlobalStore
 	ResetCronTime(after time.Duration, limit int64) (succeedCount int64, hasRemaining bool, err error)
+	FindKeyValues(cat, k string) ([]KVStore, error)
+	UpdateKeyValue(oldKV *KVStore, key, value string) error
+	DeleteKeyValue(cat, key string) error
+	CreateKeyValue(cat, key, value string) error
 }

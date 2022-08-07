@@ -447,3 +447,19 @@ func (s *Store) ResetCronTime(after time.Duration, limit int64) (succeedCount in
 	})
 	return
 }
+
+func (s *Store) FindKeyValues(cat, k string) ([]storage.KVStore, error) {
+	return nil, nil
+}
+
+func (s *Store) UpdateKeyValue(oldKV *storage.KVStore, key, value string) error {
+	return nil
+}
+
+func (s *Store) DeleteKeyValue(cat, key string) error {
+	return nil
+}
+
+func (s *Store) CreateKeyValue(cat, key, value string) error {
+	return nil
+}

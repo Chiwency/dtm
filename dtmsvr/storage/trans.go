@@ -79,3 +79,15 @@ func (b *TransBranchStore) TableName() string {
 func (b *TransBranchStore) String() string {
 	return dtmimp.MustMarshalString(*b)
 }
+
+type KVStore struct {
+	dtmutil.ModelBase
+	Cat     string `json:"cat"`
+	K       string `json:"k"`
+	V       string `json:"v"`
+	Version uint64 `json:"version"`
+}
+
+func (k *KVStore) TableName() string {
+	return "kv"
+}

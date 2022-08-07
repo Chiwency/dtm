@@ -54,7 +54,7 @@ func TestMain(m *testing.M) {
 	conf.Store.Db = ""
 	registry.WaitStoreUp()
 
-	dtmsvr.PopulateDB(false)
+	dtmsvr.PopulateDB(true)
 	conf.Store.Db = "dtm" // after populateDB, set current db to dtm
 	if tenv == "postgres" {
 		busi.BusiConf = conf.Store.GetDBConf()
@@ -62,7 +62,7 @@ func TestMain(m *testing.M) {
 	}
 	go dtmsvr.StartSvr()
 
-	busi.PopulateDB(false)
+	busi.PopulateDB(true)
 	hsvr, gsvr := busi.Startup()
 	// WorkflowStarup 1
 	workflow.InitHTTP(dtmutil.DefaultHTTPServer, Busi+"/workflow/resume")
