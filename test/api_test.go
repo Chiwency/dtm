@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/dtm-labs/dtm/client/dtmcli"
 	"github.com/dtm-labs/dtm/client/dtmcli/dtmimp"
 	"github.com/dtm-labs/dtm/dtmutil"
 	"github.com/dtm-labs/dtm/test/busi"
@@ -19,7 +20,7 @@ import (
 )
 
 func TestAPIVersion(t *testing.T) {
-	resp, err := dtmimp.RestyClient.R().Get(dtmutil.DefaultHTTPServer + "/version")
+	resp, err := dtmcli.GetRestyClient().R().Get(dtmutil.DefaultHTTPServer + "/version")
 	assert.Nil(t, err)
 	assert.Equal(t, 200, resp.StatusCode())
 }
@@ -85,7 +86,7 @@ func TestAPIQuery(t *testing.T) {
 	err := genMsg(gid).Submit()
 	assert.Nil(t, err)
 	waitTransProcessed(gid)
-	resp, err := dtmimp.RestyClient.R().SetQueryParam("gid", gid).Get(dtmutil.DefaultHTTPServer + "/query")
+	resp, err := dtmcli.GetRestyClient().R().SetQueryParam("gid", gid).Get(dtmutil.DefaultHTTPServer + "/query")
 	assert.Nil(t, err)
 	m := map[string]interface{}{}
 	assert.Equal(t, resp.StatusCode(), 200)
@@ -93,11 +94,11 @@ func TestAPIQuery(t *testing.T) {
 	assert.NotEqual(t, nil, m["transaction"])
 	assert.Equal(t, 2, len(m["branches"].([]interface{})))
 
-	resp, err = dtmimp.RestyClient.R().SetQueryParam("gid", "").Get(dtmutil.DefaultHTTPServer + "/query")
+	resp, err = dtmcli.GetRestyClient().R().SetQueryParam("gid", "").Get(dtmutil.DefaultHTTPServer + "/query")
 	e2p(err)
 	assert.Equal(t, resp.StatusCode(), 500)
 
-	resp, err = dtmimp.RestyClient.R().SetQueryParam("gid", "1").Get(dtmutil.DefaultHTTPServer + "/query")
+	resp, err = dtmcli.GetRestyClient().R().SetQueryParam("gid", "1").Get(dtmutil.DefaultHTTPServer + "/query")
 	e2p(err)
 	assert.Equal(t, resp.StatusCode(), 200)
 	dtmimp.MustUnmarshalString(resp.String(), &m)
@@ -112,14 +113,14 @@ func TestAPIAll(t *testing.T) {
 		assert.Nil(t, err)
 		waitTransProcessed(gid)
 	}
-	resp, err := dtmimp.RestyClient.R().SetQueryParam("limit", "1").Get(dtmutil.DefaultHTTPServer + "/all")
+	resp, err := dtmcli.GetRestyClient().R().SetQueryParam("limit", "1").Get(dtmutil.DefaultHTTPServer + "/all")
 	assert.Nil(t, err)
 	m := map[string]interface{}{}
 	dtmimp.MustUnmarshalString(resp.String(), &m)
 	nextPos := m["next_position"].(string)
 	assert.NotEqual(t, "", nextPos)
 
-	resp, err = dtmimp.RestyClient.R().SetQueryParams(map[string]string{
+	resp, err = dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
 		"limit":    "1",
 		"position": nextPos,
 	}).Get(dtmutil.DefaultHTTPServer + "/all")
@@ -129,7 +130,7 @@ func TestAPIAll(t *testing.T) {
 	assert.NotEqual(t, "", nextPos2)
 	assert.NotEqual(t, nextPos, nextPos2)
 
-	resp, err = dtmimp.RestyClient.R().SetQueryParams(map[string]string{
+	resp, err = dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
 		"limit":    "1000",
 		"position": nextPos,
 	}).Get(dtmutil.DefaultHTTPServer + "/all")
@@ -140,7 +141,7 @@ func TestAPIAll(t *testing.T) {
 }
 
 func TestDtmMetrics(t *testing.T) {
-	rest, err := dtmimp.RestyClient.R().Get("http://localhost:36789/api/metrics")
+	rest, err := dtmcli.GetRestyClient().R().Get("http://localhost:36789/api/metrics")
 	assert.Nil(t, err)
 	assert.Equal(t, rest.StatusCode(), 200)
 }
@@ -150,7 +151,7 @@ func TestAPIResetCronTime(t *testing.T) {
 		sTimeout := strconv.FormatInt(timeout, 10)
 		sLimit := strconv.FormatInt(limit, 10)
 
-		resp, err := dtmimp.RestyClient.R().SetQueryParams(map[string]string{
+		resp, err := dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
 			"timeout": sTimeout,
 			"limit":   sLimit,
 		}).Get(dtmutil.DefaultHTTPServer + "/resetCronTime")
@@ -172,7 +173,7 @@ func TestAPIForceStoppedNormal(t *testing.T) {
 	waitTransProcessed(saga.Gid)
 	assert.Equal(t, StatusSubmitted, getTransStatus(saga.Gid))
 
-	resp, err := dtmimp.RestyClient.R().SetBody(map[string]string{
+	resp, err := dtmcli.GetRestyClient().R().SetBody(map[string]string{
 		"gid": saga.Gid,
 	}).Post(dtmutil.DefaultHTTPServer + "/forceStop")
 	assert.Nil(t, err)
@@ -187,7 +188,7 @@ func TestAPIForceStoppedAbnormal(t *testing.T) {
 	assert.Equal(t, []string{StatusPrepared, StatusSucceed, StatusPrepared, StatusSucceed}, getBranchesStatus(saga.Gid))
 	assert.Equal(t, StatusSucceed, getTransStatus(saga.Gid))
 
-	resp, err := dtmimp.RestyClient.R().SetBody(map[string]string{
+	resp, err := dtmcli.GetRestyClient().R().SetBody(map[string]string{
 		"gid": saga.Gid,
 	}).Post(dtmutil.DefaultHTTPServer + "/forceStop")
 	assert.Nil(t, err)
