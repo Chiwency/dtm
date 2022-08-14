@@ -60,7 +60,5 @@ func Main(version *string) (*gin.Engine, *config.Type) {
 	registry.WaitStoreUp()
 	app := dtmsvr.StartSvr()       // start dtmsvr api
 	go dtmsvr.CronExpiredTrans(-1) // start dtmsvr cron job
-	dtmsvr.UpdateTopicsMap()
-	go dtmsvr.CronUpdateTopicsMap()
 	return app, &config.Config
 }

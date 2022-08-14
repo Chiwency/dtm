@@ -181,47 +181,60 @@ func (s *Store) ResetCronTime(after time.Duration, limit int64) (succeedCount in
 	return affected, affected == limit, err
 }
 
-func (s *Store) FindKeyValues(cat, k string) ([]storage.KVStore, error) {
-	values := []storage.KVStore{}
+// FindKV finds key-value pairs
+func (s *Store) FindKV(cat, key string) []storage.KVStore {
+	kvs := []storage.KVStore{}
 	db := dbGet().Model(&storage.KVStore{})
 	if cat != "" {
 		db = db.Where("cat=?", cat)
 	}
-	if k != "" {
-		db = db.Where("k=?", k)
+	if key != "" {
+		db = db.Where("k=?", key)
 	}
-	return values, db.Find(&values).Error
+	db.Find(&kvs)
+	return kvs
 }
 
-func (s *Store) UpdateKeyValue(oldKV *storage.KVStore, key, value string) error {
-	if key == "" {
-		key = oldKV.K
-	}
-	if value == "" {
-		value = oldKV.V
-	}
-	dbr := dbGet().Model(&storage.KVStore{}).Where("id=? and version=?", oldKV.ID, oldKV.Version).
-		Updates(storage.KVStore{K: key, V: value, Version: oldKV.Version + 1})
-	if dbr.RowsAffected == 0 {
-		return storage.ConcurrentConflict
+// UpdateKV updates key-value pair
+func (s *Store) UpdateKV(kv *storage.KVStore) error {
+	now := time.Now()
+	kv.UpdateTime = &now
+	oldVersion := kv.Version
+	kv.Version = oldVersion + 1
+	dbr := dbGet().Model(&storage.KVStore{}).Where("id=? and version=?", kv.ID, oldVersion).
+		Updates(kv)
+	if dbr.Error == nil && dbr.RowsAffected == 0 {
+		return storage.ErrNotFound
 	}
 	return dbr.Error
 }
 
-func (s *Store) DeleteKeyValue(cat, key string) error {
-	return dbGet().Where("cat=? and k=?", cat, key).Delete(&storage.KVStore{}).Error
+// DeleteKV deletes key-value pair
+func (s *Store) DeleteKV(cat, key string) error {
+	dbr := dbGet().Where("cat=? and k=?", cat, key).Delete(&storage.KVStore{})
+	if dbr.Error == nil && dbr.RowsAffected == 0 {
+		return storage.ErrNotFound
+	}
+	return dbr.Error
 }
 
-func (s *Store) CreateKeyValue(cat, key, value string) error {
-	dbr := dbGet().Clauses(clause.OnConflict{
-		DoNothing: true,
-	}).Create(&storage.KVStore{
+// CreateKV creates key-value pair
+func (s *Store) CreateKV(cat, key, value string) error {
+	now := time.Now()
+	kv := &storage.KVStore{
+		ModelBase: dtmutil.ModelBase{
+			CreateTime: &now,
+			UpdateTime: &now,
+		},
 		Cat:     cat,
 		K:       key,
 		V:       value,
 		Version: 1,
-	})
-	if dbr.Error == nil && dbr.RowsAffected <= 0 {
+	}
+	dbr := dbGet().Clauses(clause.OnConflict{
+		DoNothing: true,
+	}).Create(kv)
+	if dbr.Error == nil && dbr.RowsAffected == 0 {
 		return storage.ErrUniqueConflict
 	}
 	return dbr.Error

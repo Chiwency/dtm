@@ -9,7 +9,7 @@
    Driver: 'mysql'
    Host: 'localhost'
    User: 'root'
-   Password: ''
+   Password: '123'
    Port: 3306
    Db: 'dtm'
 

@@ -30,6 +30,7 @@ func TestMain(m *testing.M) {
 	dtmsvr.NowForwardDuration = 0 * time.Second
 	dtmsvr.CronForwardDuration = 180 * time.Second
 	conf.UpdateBranchSync = 1
+	conf.ConfigUpdateInterval = 1
 
 	dtmdriver.Middlewares.HTTP = append(dtmdriver.Middlewares.HTTP, busi.SetHTTPHeaderForHeadersYes)
 	dtmdriver.Middlewares.Grpc = append(dtmdriver.Middlewares.Grpc, busi.SetGrpcHeaderForHeadersYes)
@@ -41,7 +42,7 @@ func TestMain(m *testing.M) {
 	} else if tenv == config.Mysql {
 		conf.Store.Port = 3306
 		conf.Store.User = "root"
-		conf.Store.Password = ""
+		conf.Store.Password = "123"
 	} else if tenv == config.Postgres {
 		conf.Store.Port = 5432
 		conf.Store.User = "postgres"

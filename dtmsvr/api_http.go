@@ -36,6 +36,7 @@ func addRoute(engine *gin.Engine) {
 	engine.GET("/api/dtmsvr/resetCronTime", dtmutil.WrapHandler2(resetCronTime))
 	engine.GET("/api/dtmsvr/subscribe", dtmutil.WrapHandler2(subscribe))
 	engine.GET("/api/dtmsvr/unsubscribe", dtmutil.WrapHandler2(unsubscribe))
+	engine.DELETE("/api/dtmsvr/topic/:topicName", dtmutil.WrapHandler2(deleteTopic))
 
 	// add prometheus exporter
 	h := promhttp.Handler()
@@ -139,4 +140,12 @@ func unsubscribe(c *gin.Context) interface{} {
 		return errors.New("no url specified")
 	}
 	return UnSubscribe(topic, url)
+}
+
+func deleteTopic(c *gin.Context) interface{} {
+	topic := c.Param("topicName")
+	if topic == "" {
+		return errors.New("no topic specified")
+	}
+	return GetStore().DeleteKV(topicsCat, topic)
 }

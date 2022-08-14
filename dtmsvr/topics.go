@@ -1,10 +1,7 @@
 package dtmsvr
 
 import (
-	"encoding/json"
 	"errors"
-	"time"
-
 	"github.com/dtm-labs/dtm/client/dtmcli/dtmimp"
 	"github.com/dtm-labs/dtm/client/dtmcli/logger"
 )
@@ -13,105 +10,96 @@ const (
 	topicsCat = "topics"
 )
 
-var (
-	topicsMap = map[string]*Topic{}
-	firstInit = true
-)
+var topicsMap = map[string]Topic{}
 
 type Topic struct {
-	Name    string    `json:"k"`
-	Urls    []UrlInfo `json:"v"`
-	Version uint64    `json:"version"`
+	Name        string       `json:"k"`
+	Subscribers []Subscriber `json:"v"`
+	Version     uint64       `json:"version"`
 }
 
-type UrlInfo struct {
-	Url    string `json:"url"`
+type Subscriber struct {
+	URL    string `json:"url"`
 	Remark string `json:"remark"`
 }
 
-// Subscribe subscribe topic, create topic if not exist
-func Subscribe(topic, url, remark string) error {
-	urlToAdd := UrlInfo{
-		Url:    url,
-		Remark: remark,
+func topic2urls(topic string) []string {
+	urls := make([]string, len(topicsMap[topic].Subscribers))
+	for k, subscriber := range topicsMap[topic].Subscribers {
+		urls[k] = subscriber.URL
 	}
-	kvs, err := GetStore().FindKeyValues(topicsCat, topic)
-	if err != nil {
-		return err
-	}
-	if len(kvs) == 0 {
-		return GetStore().CreateKeyValue(topicsCat, topic, dtmimp.MustMarshalString([]UrlInfo{urlToAdd}))
-	}
-	urlInfos := []UrlInfo{}
-	dtmimp.MustUnmarshalString(kvs[0].V, &urlInfos)
-	for _, urlInfo := range urlInfos {
-		if urlInfo.Url == url {
-			return errors.New("this url has already exists")
-		}
-	}
-	urlInfos = append(urlInfos, urlToAdd)
-	return GetStore().UpdateKeyValue(&kvs[0], "", dtmimp.MustMarshalString(urlInfos))
+	return urls
 }
 
-func UnSubscribe(topic, url string) error {
-	kvs, err := GetStore().FindKeyValues(topicsCat, topic)
-	if err != nil {
-		return err
+//func QueryAllTopics() []Topic {
+//	kvs, err := GetStore().FindKV(topicsCat, "")
+//	if err != nil {
+//		return err
+//	}
+//}
+
+// Subscribe subscribes topic, create topic if not exist
+func Subscribe(topic, url, remark string) error {
+	newSubscriber := Subscriber{
+		URL:    url,
+		Remark: remark,
 	}
+	kvs := GetStore().FindKV(topicsCat, topic)
+	if len(kvs) == 0 {
+		return GetStore().CreateKV(topicsCat, topic, dtmimp.MustMarshalString([]Subscriber{newSubscriber}))
+	}
+
+	subscribers := []Subscriber{}
+	dtmimp.MustUnmarshalString(kvs[0].V, &subscribers)
+	for _, subscriber := range subscribers {
+		if subscriber.URL == url {
+			return errors.New("this url exists")
+		}
+	}
+	subscribers = append(subscribers, newSubscriber)
+	kvs[0].V = dtmimp.MustMarshalString(subscribers)
+	return GetStore().UpdateKV(&kvs[0])
+}
+
+// UnSubscribe Unsubscribes topic
+func UnSubscribe(topic, url string) error {
+	kvs := GetStore().FindKV(topicsCat, topic)
 	if len(kvs) == 0 {
 		return errors.New("no such a topic")
 	}
-	urlInfos := []UrlInfo{}
-	dtmimp.MustUnmarshalString(kvs[0].V, &urlInfos)
-	if len(urlInfos) == 0 {
-		return errors.New("this topic has is empty")
+	subscribers := []Subscriber{}
+	dtmimp.MustUnmarshalString(kvs[0].V, &subscribers)
+	if len(subscribers) == 0 {
+		return errors.New("this topic is empty")
 	}
-	n := len(urlInfos)
-	for k, urlInfo := range urlInfos {
-		if urlInfo.Url == url {
-			urlInfos = append(urlInfos[:k], urlInfos[k+1:]...)
+	n := len(subscribers)
+	for k, subscriber := range subscribers {
+		if subscriber.URL == url {
+			subscribers = append(subscribers[:k], subscribers[k+1:]...)
 			break
 		}
 	}
-	if len(urlInfos) == n {
+	if len(subscribers) == n {
 		return errors.New("no such an url ")
 	}
-	return GetStore().UpdateKeyValue(&kvs[0], "", dtmimp.MustMarshalString(urlInfos))
+	kvs[0].V = dtmimp.MustMarshalString(subscribers)
+	return GetStore().UpdateKV(&kvs[0])
 }
 
-func UpdateTopicsMap() {
-	kvs, err := GetStore().FindKeyValues(topicsCat, "")
-	if err != nil {
-		logger.FatalfIf(firstInit, "init topicsMap failed. error: %v", err)
-		logger.Errorf("update topicsMap error: %v", err)
-		return
-	}
-
+// updateTopicsMap updates the topicsMap variable, unsafe for concurrent
+func updateTopicsMap() {
+	kvs := GetStore().FindKV(topicsCat, "")
 	for _, kv := range kvs {
-		topic, exist := topicsMap[kv.K]
-		if exist && topic.Version >= kv.Version {
+		topic := topicsMap[kv.K]
+		if topic.Version >= kv.Version {
 			continue
 		}
-		newTopic := &Topic{}
+		newTopic := Topic{}
 		newTopic.Name = kv.K
 		newTopic.Version = kv.Version
-		err = json.Unmarshal([]byte(kv.V), &newTopic.Urls)
-		if err != nil {
-			logger.FatalfIf(firstInit, "init topicsMap failed. error: %v, topicInfo: %v", err, kv)
-			logger.Errorf("update topicsMap error: %v, topicInfo: %v", err, kv)
-			continue
-		}
-		logger.Infof("topic updated. old topic:%v new topic:%v", topicsMap[kv.K], newTopic)
+		dtmimp.MustUnmarshalString(kv.V, &newTopic.Subscribers)
 		topicsMap[kv.K] = newTopic
+		logger.Infof("topic updated. old topic:%v new topic:%v", topicsMap[kv.K], newTopic)
 	}
-
-	firstInit = false
-	return
-}
-
-func CronUpdateTopicsMap() {
-	for {
-		time.Sleep(time.Duration(conf.ConfigUpdateInterval) * time.Second)
-		UpdateTopicsMap()
-	}
+	logger.Infof("all topic updated. topic:%v", topicsMap)
 }

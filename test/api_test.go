@@ -26,7 +26,7 @@ func TestAPIVersion(t *testing.T) {
 }
 
 func TestAPISubscribe(t *testing.T) {
-	resp, err := dtmimp.RestyClient.R().SetQueryParams(map[string]string{
+	resp, err := dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
 		"topic":  "test_topic",
 		"url":    "http://dtm/test1",
 		"remark": "for test",
@@ -34,7 +34,7 @@ func TestAPISubscribe(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 200, resp.StatusCode())
 
-	resp, err = dtmimp.RestyClient.R().SetQueryParams(map[string]string{
+	resp, err = dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
 		"topic":  "test_topic",
 		"url":    "http://dtm/test1",
 		"remark": "for test",
@@ -42,7 +42,7 @@ func TestAPISubscribe(t *testing.T) {
 	e2p(err)
 	assert.Equal(t, 500, resp.StatusCode())
 
-	resp, err = dtmimp.RestyClient.R().SetQueryParams(map[string]string{
+	resp, err = dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
 		"topic":  "test_topic",
 		"url":    "http://dtm/test2",
 		"remark": "for test",
@@ -52,28 +52,39 @@ func TestAPISubscribe(t *testing.T) {
 }
 
 func TestAPIUnSubscribe(t *testing.T) {
-	resp, err := dtmimp.RestyClient.R().SetQueryParams(map[string]string{
+	dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
+		"topic":  "test_topic",
+		"url":    "http://dtm/test1",
+		"remark": "for test",
+	}).Get(dtmutil.DefaultHTTPServer + "/subscribe")
+	dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
+		"topic":  "test_topic",
+		"url":    "http://dtm/test2",
+		"remark": "for test",
+	}).Get(dtmutil.DefaultHTTPServer + "/subscribe")
+
+	resp, err := dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
 		"topic": "test_topic",
 		"url":   "http://dtm/test1",
 	}).Get(dtmutil.DefaultHTTPServer + "/unsubscribe")
 	assert.Nil(t, err)
 	assert.Equal(t, 200, resp.StatusCode())
 
-	resp, err = dtmimp.RestyClient.R().SetQueryParams(map[string]string{
+	resp, err = dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
 		"topic": "test_topic",
 		"url":   "http://dtm/test1",
 	}).Get(dtmutil.DefaultHTTPServer + "/unsubscribe")
 	e2p(err)
 	assert.Equal(t, 500, resp.StatusCode())
 
-	resp, err = dtmimp.RestyClient.R().SetQueryParams(map[string]string{
+	resp, err = dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
 		"topic": "test_topic",
 		"url":   "http://dtm/test2",
 	}).Get(dtmutil.DefaultHTTPServer + "/unsubscribe")
 	assert.Nil(t, err)
 	assert.Equal(t, 200, resp.StatusCode())
 
-	resp, err = dtmimp.RestyClient.R().SetQueryParams(map[string]string{
+	resp, err = dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
 		"topic": "test_topic",
 		"url":   "http://dtm/test2",
 	}).Get(dtmutil.DefaultHTTPServer + "/unsubscribe")

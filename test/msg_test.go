@@ -8,6 +8,7 @@ package test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/dtm-labs/dtm/client/dtmcli"
 	"github.com/dtm-labs/dtm/client/dtmcli/dtmimp"
@@ -21,7 +22,7 @@ func TestMsgNormal(t *testing.T) {
 	msg.Submit()
 	assert.Equal(t, StatusSubmitted, getTransStatus(msg.Gid))
 	waitTransProcessed(msg.Gid)
-	assert.Equal(t, []string{StatusSucceed, StatusSucceed}, getBranchesStatus(msg.Gid))
+	assert.Equal(t, []string{StatusSucceed, StatusSucceed, StatusSucceed, StatusSucceed}, getBranchesStatus(msg.Gid))
 	assert.Equal(t, StatusSucceed, getTransStatus(msg.Gid))
 }
 
@@ -37,7 +38,7 @@ func TestMsgTimeoutSuccess(t *testing.T) {
 	cronTransOnceForwardNow(t, gid, 180)
 	assert.Equal(t, StatusSubmitted, getTransStatus(msg.Gid))
 	cronTransOnce(t, gid)
-	assert.Equal(t, []string{StatusSucceed, StatusSucceed}, getBranchesStatus(msg.Gid))
+	assert.Equal(t, []string{StatusSucceed, StatusSucceed, StatusSucceed, StatusSucceed}, getBranchesStatus(msg.Gid))
 	assert.Equal(t, StatusSucceed, getTransStatus(msg.Gid))
 }
 
@@ -51,7 +52,7 @@ func TestMsgTimeoutFailed(t *testing.T) {
 	assert.Equal(t, StatusPrepared, getTransStatus(msg.Gid))
 	busi.MainSwitch.QueryPreparedResult.SetOnce(dtmcli.ResultFailure)
 	cronTransOnceForwardNow(t, gid, 180)
-	assert.Equal(t, []string{StatusPrepared, StatusPrepared}, getBranchesStatus(msg.Gid))
+	assert.Equal(t, []string{StatusPrepared, StatusPrepared, StatusPrepared, StatusPrepared}, getBranchesStatus(msg.Gid))
 	assert.Equal(t, StatusFailed, getTransStatus(msg.Gid))
 }
 
@@ -68,10 +69,27 @@ func TestMsgAbnormal(t *testing.T) {
 }
 
 func genMsg(gid string) *dtmcli.Msg {
+	subscribeTopic()
 	req := busi.GenReqHTTP(30, false, false)
 	msg := dtmcli.NewMsg(dtmutil.DefaultHTTPServer, gid).
+		AddTopic("trans", &req).
 		Add(busi.Busi+"/TransOut", &req).
 		Add(busi.Busi+"/TransIn", &req)
 	msg.QueryPrepared = busi.Busi + "/QueryPrepared"
 	return msg
+}
+
+func subscribeTopic() {
+	dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
+		"topic":  "trans",
+		"url":    busi.Busi + "/TransOut",
+		"remark": "trans test",
+	}).Get(dtmutil.DefaultHTTPServer + "/subscribe")
+	dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
+		"topic":  "trans",
+		"url":    busi.Busi + "/TransIn",
+		"remark": "trans test",
+	}).Get(dtmutil.DefaultHTTPServer + "/subscribe")
+	// wait for the topic configuration to take effect
+	time.Sleep(time.Second * time.Duration(conf.ConfigUpdateInterval+1))
 }

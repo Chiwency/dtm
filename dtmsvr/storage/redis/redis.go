@@ -333,20 +333,100 @@ redis.call('SET', KEYS[1], ARGV[3], 'EX', ARGV[2])
 	dtmimp.E2P(err)
 }
 
-func (s *Store) FindKeyValues(cat, k string) ([]storage.KVStore, error) {
-	return nil, nil
+// FindKV finds key-value pairs
+func (s *Store) FindKV(cat, key string) []storage.KVStore {
+	var keys []string
+	pattern := conf.Store.RedisPrefix + "_kv_"
+	if cat != "" {
+		pattern += cat + "_"
+	}
+	if key != "" {
+		keys = []string{pattern + key}
+	} else {
+		lid := uint64(0)
+		r := redisGet().Scan(ctx, lid, pattern+"*", int64(-1))
+		dtmimp.E2P(r.Err())
+		keys, _ = r.Val()
+	}
+
+	var kvs []storage.KVStore
+	if len(keys) <= 0 {
+		return nil
+	}
+	values, err := redisGet().MGet(ctx, keys...).Result()
+	dtmimp.E2P(err)
+	for _, v := range values {
+		if v == nil {
+			continue
+		}
+		kv := storage.KVStore{}
+		dtmimp.MustUnmarshalString(v.(string), &kv)
+		kvs = append(kvs, kv)
+	}
+	return kvs
 }
 
-func (s *Store) UpdateKeyValue(oldKV *storage.KVStore, key, value string) error {
-	return nil
+// UpdateKV updates key-value pair
+func (s *Store) UpdateKV(kv *storage.KVStore) error {
+	now := time.Now()
+	kv.UpdateTime = &now
+	oldVersion := kv.Version
+	kv.Version = oldVersion + 1
+
+	redisKey := fmt.Sprintf("%s_kv_%s_%s", conf.Store.RedisPrefix, kv.Cat, kv.K)
+	args := &argList{}
+	args.Keys = append(args.Keys, redisKey)
+	args.AppendRaw(oldVersion)
+	args.AppendObject(kv)
+	_, err := callLua(args, `-- UpdateKV
+local oldJson = redis.call('GET', KEYS[1])
+if oldJson == false then
+	return 'NOT_FOUND'
+end
+local old = cjson.decode(oldJson)
+if tostring(old.version) == ARGV[1] then
+	redis.call('SET', KEYS[1], ARGV[2])
+else 
+	return 'NOT_FOUND'
+end
+`)
+	return err
 }
 
-func (s *Store) DeleteKeyValue(cat, key string) error {
-	return nil
+// DeleteKV deletes key-value pair
+func (s *Store) DeleteKV(cat, key string) error {
+	affected, err := redisGet().Del(ctx, fmt.Sprintf("%s_kv_%s_%s", conf.Store.RedisPrefix, cat, key)).Result()
+	if err == nil && affected == 0 {
+		return storage.ErrNotFound
+	}
+	return err
 }
 
-func (s *Store) CreateKeyValue(cat, key, value string) error {
-	return nil
+// CreateKV creates key-value pair
+func (s *Store) CreateKV(cat, key, value string) error {
+	now := time.Now()
+	kv := &storage.KVStore{
+		ModelBase: dtmutil.ModelBase{
+			CreateTime: &now,
+			UpdateTime: &now,
+		},
+		Cat:     cat,
+		K:       key,
+		V:       value,
+		Version: 1,
+	}
+	redisKey := fmt.Sprintf("%s_kv_%s_%s", conf.Store.RedisPrefix, kv.Cat, kv.K)
+	args := &argList{}
+	args.Keys = append(args.Keys, redisKey)
+	args.AppendObject(kv)
+	_, err := callLua(args, `-- CreateKV
+local key = redis.call('GET', KEYS[1])
+if key ~= false then
+	return 'UNIQUE_CONFLICT'
+end
+redis.call('SET', KEYS[1], ARGV[1])
+`)
+	return err
 }
 
 var (
