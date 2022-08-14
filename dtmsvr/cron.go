@@ -56,6 +56,7 @@ func CronUpdateTopicsMap() {
 		cronUpdateTopicsMapOnce()
 	}
 }
+
 func cronUpdateTopicsMapOnce() {
 	defer handlePanic(nil)
 	updateTopicsMap()
