@@ -32,6 +32,7 @@ func (s *Msg) Add(action string, postData interface{}) *Msg {
 	return s
 }
 
+// AddTopic add a new topic step
 func (s *Msg) AddTopic(topic string, postData interface{}) *Msg {
 	return s.Add(fmt.Sprintf("%s%s", dtmimp.MsgTopicPrefix, topic), postData)
 }

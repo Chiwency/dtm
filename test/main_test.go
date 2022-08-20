@@ -42,7 +42,7 @@ func TestMain(m *testing.M) {
 	} else if tenv == config.Mysql {
 		conf.Store.Port = 3306
 		conf.Store.User = "root"
-		conf.Store.Password = "123"
+		conf.Store.Password = ""
 	} else if tenv == config.Postgres {
 		conf.Store.Port = 5432
 		conf.Store.User = "postgres"
@@ -55,7 +55,7 @@ func TestMain(m *testing.M) {
 	conf.Store.Db = ""
 	registry.WaitStoreUp()
 
-	dtmsvr.PopulateDB(true)
+	dtmsvr.PopulateDB(false)
 	conf.Store.Db = "dtm" // after populateDB, set current db to dtm
 	if tenv == "postgres" {
 		busi.BusiConf = conf.Store.GetDBConf()
@@ -63,7 +63,7 @@ func TestMain(m *testing.M) {
 	}
 	go dtmsvr.StartSvr()
 
-	busi.PopulateDB(true)
+	busi.PopulateDB(false)
 	hsvr, gsvr := busi.Startup()
 	// WorkflowStarup 1
 	workflow.InitHTTP(dtmutil.DefaultHTTPServer, Busi+"/workflow/resume")

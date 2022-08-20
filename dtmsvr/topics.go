@@ -40,6 +40,13 @@ func topic2urls(topic string) []string {
 
 // Subscribe subscribes topic, create topic if not exist
 func Subscribe(topic, url, remark string) error {
+	if topic == "" {
+		return errors.New("empty topic")
+	}
+	if url == "" {
+		return errors.New("empty url")
+	}
+
 	newSubscriber := Subscriber{
 		URL:    url,
 		Remark: remark,
@@ -63,6 +70,13 @@ func Subscribe(topic, url, remark string) error {
 
 // UnSubscribe Unsubscribes topic
 func UnSubscribe(topic, url string) error {
+	if topic == "" {
+		return errors.New("empty topic")
+	}
+	if url == "" {
+		return errors.New("empty url")
+	}
+
 	kvs := GetStore().FindKV(topicsCat, topic)
 	if len(kvs) == 0 {
 		return errors.New("no such a topic")

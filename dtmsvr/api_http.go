@@ -121,31 +121,22 @@ func subscribe(c *gin.Context) interface{} {
 	topic := c.Query("topic")
 	url := c.Query("url")
 	remark := c.Query("remark")
-	if topic == "" {
-		return errors.New("no topic specified")
-	}
-	if url == "" {
-		return errors.New("no url specified")
-	}
+
 	return Subscribe(topic, url, remark)
 }
 
 func unsubscribe(c *gin.Context) interface{} {
 	topic := c.Query("topic")
 	url := c.Query("url")
-	if topic == "" {
-		return errors.New("no topic specified")
-	}
-	if url == "" {
-		return errors.New("no url specified")
-	}
+
 	return UnSubscribe(topic, url)
 }
 
 func deleteTopic(c *gin.Context) interface{} {
 	topic := c.Param("topicName")
 	if topic == "" {
-		return errors.New("no topic specified")
+		return errors.New("empty topic")
 	}
+
 	return GetStore().DeleteKV(topicsCat, topic)
 }

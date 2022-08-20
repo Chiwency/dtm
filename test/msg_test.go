@@ -72,7 +72,7 @@ func genMsg(gid string) *dtmcli.Msg {
 	subscribeTopic()
 	req := busi.GenReqHTTP(30, false, false)
 	msg := dtmcli.NewMsg(dtmutil.DefaultHTTPServer, gid).
-		AddTopic("trans", &req).
+		AddTopic("http_trans", &req).
 		Add(busi.Busi+"/TransOut", &req).
 		Add(busi.Busi+"/TransIn", &req)
 	msg.QueryPrepared = busi.Busi + "/QueryPrepared"
@@ -80,16 +80,9 @@ func genMsg(gid string) *dtmcli.Msg {
 }
 
 func subscribeTopic() {
-	dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
-		"topic":  "trans",
-		"url":    busi.Busi + "/TransOut",
-		"remark": "trans test",
-	}).Get(dtmutil.DefaultHTTPServer + "/subscribe")
-	dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
-		"topic":  "trans",
-		"url":    busi.Busi + "/TransIn",
-		"remark": "trans test",
-	}).Get(dtmutil.DefaultHTTPServer + "/subscribe")
+	e2p(httpSubscribe("http_trans", busi.Busi+"/TransOut"))
+	e2p(httpSubscribe("http_trans", busi.Busi+"/TransIn"))
+
 	// wait for the topic configuration to take effect
 	time.Sleep(time.Second * time.Duration(conf.ConfigUpdateInterval+1))
 }

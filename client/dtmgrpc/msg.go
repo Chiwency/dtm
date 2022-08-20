@@ -9,7 +9,7 @@ package dtmgrpc
 import (
 	"database/sql"
 	"errors"
-
+	"fmt"
 	"github.com/dtm-labs/dtm/client/dtmcli"
 	"github.com/dtm-labs/dtm/client/dtmcli/dtmimp"
 	"github.com/dtm-labs/dtm/client/dtmgrpc/dtmgimp"
@@ -31,6 +31,11 @@ func (s *MsgGrpc) Add(action string, msg proto.Message) *MsgGrpc {
 	s.Steps = append(s.Steps, map[string]string{"action": action})
 	s.BinPayloads = append(s.BinPayloads, dtmgimp.MustProtoMarshal(msg))
 	return s
+}
+
+// AddTopic add a new topic step
+func (s *MsgGrpc) AddTopic(topic string, msg proto.Message) *MsgGrpc {
+	return s.Add(fmt.Sprintf("%s%s", dtmimp.MsgTopicPrefix, topic), msg)
 }
 
 // SetDelay delay call branch, unit second
