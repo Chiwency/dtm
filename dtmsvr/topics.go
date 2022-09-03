@@ -12,12 +12,14 @@ const (
 
 var topicsMap = map[string]Topic{}
 
+//Topic define topic info
 type Topic struct {
 	Name        string       `json:"k"`
 	Subscribers []Subscriber `json:"v"`
 	Version     uint64       `json:"version"`
 }
 
+//Subscriber define subscriber info
 type Subscriber struct {
 	URL    string `json:"url"`
 	Remark string `json:"remark"`

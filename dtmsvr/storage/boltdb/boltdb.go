@@ -476,6 +476,36 @@ func (s *Store) ResetCronTime(after time.Duration, limit int64) (succeedCount in
 	return
 }
 
+// ScanKV lists KV pairs
+func (s *Store) ScanKV(cat string, position *string, limit int64) []storage.KVStore {
+	kvs := []storage.KVStore{}
+	err := s.boltDb.View(func(t *bolt.Tx) error {
+		cursor := t.Bucket(bucketKV).Cursor()
+		for k, v := cursor.Seek([]byte(*position)); k != nil; k, v = cursor.Next() {
+			if string(k) == *position {
+				continue
+			}
+			if !strings.HasPrefix(string(k), cat) {
+				continue
+			}
+			kv := storage.KVStore{}
+			dtmimp.MustUnmarshal(v, &kv)
+			kvs = append(kvs, kv)
+			if len(kvs) == int(limit) {
+				break
+			}
+		}
+		return nil
+	})
+	dtmimp.E2P(err)
+	if len(kvs) < int(limit) {
+		*position = ""
+	} else {
+		*position = fmt.Sprintf("%s-%s", cat, kvs[len(kvs)-1].K)
+	}
+	return kvs
+}
+
 // FindKV finds key-value pairs
 func (s *Store) FindKV(cat, key string) []storage.KVStore {
 	kvs := []storage.KVStore{}

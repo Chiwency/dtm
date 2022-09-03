@@ -37,6 +37,7 @@ func addRoute(engine *gin.Engine) {
 	engine.GET("/api/dtmsvr/subscribe", dtmutil.WrapHandler2(subscribe))
 	engine.GET("/api/dtmsvr/unsubscribe", dtmutil.WrapHandler2(unsubscribe))
 	engine.DELETE("/api/dtmsvr/topic/:topicName", dtmutil.WrapHandler2(deleteTopic))
+	engine.GET("/api/dtmsvr/queryKV", dtmutil.WrapHandler2(queryKV))
 
 	// add prometheus exporter
 	h := promhttp.Handler()
@@ -115,6 +116,14 @@ func resetCronTime(c *gin.Context) interface{} {
 		return err
 	}
 	return map[string]interface{}{"has_remaining": hasRemaining, "succeed_count": succeedCount}
+}
+
+func queryKV(c *gin.Context) interface{} {
+	cat := c.DefaultQuery("cat", "")
+	position := c.Query("position")
+	sLimit := dtmimp.OrString(c.Query("limit"), "100")
+	kv := GetStore().ScanKV(cat, &position, int64(dtmimp.MustAtoi(sLimit)))
+	return map[string]interface{}{"kv": kv, "next_position": position}
 }
 
 func subscribe(c *gin.Context) interface{} {

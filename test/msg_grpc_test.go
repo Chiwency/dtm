@@ -25,7 +25,7 @@ func TestMsgGrpcNormal(t *testing.T) {
 	assert.Nil(t, err)
 	waitTransProcessed(msg.Gid)
 	assert.Equal(t, StatusSucceed, getTransStatus(msg.Gid))
-	assert.Equal(t, []string{StatusSucceed, StatusSucceed, StatusSucceed, StatusSucceed}, getBranchesStatus(msg.Gid))
+	assert.Equal(t, []string{StatusSucceed, StatusSucceed}, getBranchesStatus(msg.Gid))
 }
 
 func TestMsgGrpcTimeoutSuccess(t *testing.T) {
@@ -39,10 +39,10 @@ func TestMsgGrpcTimeoutSuccess(t *testing.T) {
 	busi.MainSwitch.TransOutResult.SetOnce(dtmcli.ResultOngoing)
 	cronTransOnceForwardNow(t, gid, 180)
 	assert.Equal(t, StatusSubmitted, getTransStatus(msg.Gid))
-	assert.Equal(t, []string{StatusPrepared, StatusPrepared, StatusPrepared, StatusPrepared}, getBranchesStatus(msg.Gid))
+	assert.Equal(t, []string{StatusPrepared, StatusPrepared}, getBranchesStatus(msg.Gid))
 	cronTransOnce(t, gid)
 	assert.Equal(t, StatusSucceed, getTransStatus(msg.Gid))
-	assert.Equal(t, []string{StatusSucceed, StatusSucceed, StatusSucceed, StatusSucceed}, getBranchesStatus(msg.Gid))
+	assert.Equal(t, []string{StatusSucceed, StatusSucceed}, getBranchesStatus(msg.Gid))
 }
 
 func TestMsgGrpcTimeoutFailed(t *testing.T) {
@@ -56,16 +56,13 @@ func TestMsgGrpcTimeoutFailed(t *testing.T) {
 	busi.MainSwitch.QueryPreparedResult.SetOnce(dtmcli.ResultFailure)
 	cronTransOnceForwardNow(t, gid, 180)
 	assert.Equal(t, StatusFailed, getTransStatus(msg.Gid))
-	assert.Equal(t, []string{StatusPrepared, StatusPrepared, StatusPrepared, StatusPrepared}, getBranchesStatus(msg.Gid))
+	assert.Equal(t, []string{StatusPrepared, StatusPrepared}, getBranchesStatus(msg.Gid))
 }
 
 func genGrpcMsg(gid string) *dtmgrpc.MsgGrpc {
-	subscribeGrpcTopic()
 	req := &busi.ReqGrpc{Amount: 30}
 	msg := dtmgrpc.NewMsgGrpc(dtmutil.DefaultGrpcServer, gid).
-		AddTopic("grpc_trans", req).
-		Add(busi.BusiGrpc+"/busi.Busi/TransOut", req).
-		Add(busi.BusiGrpc+"/busi.Busi/TransIn", req)
+		AddTopic("grpc_trans", req)
 	msg.QueryPrepared = fmt.Sprintf("%s/busi.Busi/QueryPrepared", busi.BusiGrpc)
 	return msg
 }

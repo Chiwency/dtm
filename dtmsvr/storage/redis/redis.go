@@ -333,6 +333,36 @@ redis.call('SET', KEYS[1], ARGV[3], 'EX', ARGV[2])
 	dtmimp.E2P(err)
 }
 
+// ScanKV lists KV pairs
+func (s *Store) ScanKV(cat string, position *string, limit int64) []storage.KVStore {
+	logger.Debugf("calling ScanKV: %s %s %d", cat, *position, limit)
+	lid := uint64(0)
+	if *position != "" {
+		lid = uint64(dtmimp.MustAtoi(*position))
+	}
+	keys, cursor, err := redisGet().Scan(ctx, lid, conf.Store.RedisPrefix+"_kv_"+cat+"_*", limit).Result()
+	dtmimp.E2P(err)
+	kvs := []storage.KVStore{}
+	if len(keys) > 0 {
+		values, err := redisGet().MGet(ctx, keys...).Result()
+		dtmimp.E2P(err)
+		for _, v := range values {
+			if v == nil {
+				continue
+			}
+			kv := storage.KVStore{}
+			dtmimp.MustUnmarshalString(v.(string), &kv)
+			kvs = append(kvs, kv)
+		}
+	}
+	if cursor > 0 {
+		*position = fmt.Sprintf("%d", cursor)
+	} else {
+		*position = ""
+	}
+	return kvs
+}
+
 // FindKV finds key-value pairs
 func (s *Store) FindKV(cat, key string) []storage.KVStore {
 	var keys []string

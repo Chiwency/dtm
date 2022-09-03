@@ -70,6 +70,10 @@ func TestMain(m *testing.M) {
 	workflow.InitGrpc(dtmutil.DefaultGrpcServer, busi.BusiGrpc, gsvr)
 	go busi.RunGrpc(gsvr)
 	go busi.RunHTTP(hsvr)
+
+	subscribeTopic()
+	subscribeGrpcTopic()
+
 	r := m.Run()
 	if r != 0 {
 		os.Exit(r)

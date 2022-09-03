@@ -181,6 +181,22 @@ func (s *Store) ResetCronTime(after time.Duration, limit int64) (succeedCount in
 	return affected, affected == limit, err
 }
 
+// ScanKV lists KV pairs
+func (s *Store) ScanKV(cat string, position *string, limit int64) []storage.KVStore {
+	kvs := []storage.KVStore{}
+	lid := math.MaxInt64
+	if *position != "" {
+		lid = dtmimp.MustAtoi(*position)
+	}
+	dbr := dbGet().Must().Where("cat = ? and id < ?", cat, lid).Order("id desc").Limit(int(limit)).Find(&kvs)
+	if dbr.RowsAffected < limit {
+		*position = ""
+	} else {
+		*position = fmt.Sprintf("%d", kvs[len(kvs)-1].ID)
+	}
+	return kvs
+}
+
 // FindKV finds key-value pairs
 func (s *Store) FindKV(cat, key string) []storage.KVStore {
 	kvs := []storage.KVStore{}
