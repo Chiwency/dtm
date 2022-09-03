@@ -261,8 +261,8 @@ func tGetKV(t *bolt.Tx, cat, key string) *storage.KVStore {
 
 func tPutKV(t *bolt.Tx, kv *storage.KVStore) {
 	k := fmt.Sprintf("%s-%s", kv.Cat, kv.K)
-	kvJson := dtmimp.MustMarshal(kv)
-	err := t.Bucket(bucketKV).Put([]byte(k), kvJson)
+	kvJSON := dtmimp.MustMarshal(kv)
+	err := t.Bucket(bucketKV).Put([]byte(k), kvJSON)
 	dtmimp.E2P(err)
 }
 
