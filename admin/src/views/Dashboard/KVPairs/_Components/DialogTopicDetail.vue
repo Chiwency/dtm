@@ -3,12 +3,17 @@
     <a-modal v-model:visible="visible" title="Topic Detail" width="100%" wrap-class-name="full-modal">
       <a-table :columns="columns" :data-source="dataSource" :pagination="false">
         <template #bodyCell="{column, record}">
+          <template v-if="column.key === 'action'">
+            <span>
+              <a class="text-red-400 font-medium" >UnSubscribe</a>
+            </span>
+          </template>
         </template>
       </a-table>
-      <!--            <div class="mt-10 relative">-->
-      <!--                <a-textarea id="qs" v-model:value="textVal" :auto-size="{ minRows: 10, maxRows: 10 }" />-->
-      <!--                <screenfull class="absolute right-2 top-3 z-50" identity="qs" />-->
-      <!--            </div>-->
+      <!-- <div class="mt-10 relative">
+          <a-textarea id="qs" v-model:value="textVal" :auto-size="{ minRows: 10, maxRows: 10 }" />
+          <screenfull class="absolute right-2 top-3 z-50" identity="qs" />
+      </div> -->
     </a-modal>
   </div>
 </template>
@@ -35,6 +40,9 @@ const columns = [
     title: 'Remark',
     dataIndex: 'remark',
     key: 'remark'
+  }, {
+    title: 'Action',
+    key: 'action'
   }
 ]
 

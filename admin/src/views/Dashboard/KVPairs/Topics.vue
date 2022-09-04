@@ -1,12 +1,17 @@
 <template>
   <div>
+    <a-button type="primary" class="mb-2" @click="handleTopicSubscribe('')">Subscribe</a-button>
     <a-table :columns="columns" :data-source="dataSource" :loading="loading" :pagination="false">
       <template #bodyCell="{column, record}">
+        <template v-if="column.key === 'subscribers'">
+          <span>{{ JSON.parse(record.v).length }}</span>
+        </template>
         <template v-if="column.key === 'action'">
-                    <span>
-                        <a class="mr-2 font-medium" @click="handleTopicDetail(record.v)">Detail</a>
-                        <a class="text-red-400 font-medium" @click="deleteTopic(record.k)">Delete</a>
-                    </span>
+          <span>
+              <a class="mr-2 font-medium" @click="handleTopicSubscribe(record.k)">Subscribe</a>
+              <a class="mr-2 font-medium" @click="handleTopicDetail(record.v)">Detail</a>
+              <a class="text-red-400 font-medium" @click="handleDeleteTopic(record.k)">Delete</a>
+          </span>
         </template>
       </template>
     </a-table>
@@ -15,14 +20,17 @@
       <a-button type="text" :disabled="!canNext" @click="handleNextPage">Next</a-button>
     </div>
 
-    <DialogTopicDetail ref="topicDetail"/>
+    <DialogTopicDetail ref="topicDetail" />
+    <DialogTopicSubscribe ref="topicSubscribe" @subscribed="handleRefreshData" />
   </div>
 </template>
 <script setup lang="ts">
-import {IListAllKVReq, listKVPairs,deleteTopic} from '/@/api/api_dtm'
-import {computed, ref} from 'vue-demi'
-import {usePagination} from 'vue-request'
+import { IListAllKVReq, listKVPairs, deleteTopic } from '/@/api/api_dtm'
+import { computed, ref } from 'vue-demi'
+import { usePagination } from 'vue-request'
 import DialogTopicDetail from './_Components/DialogTopicDetail.vue';
+import DialogTopicSubscribe from './_Components/DialogTopicSubscribe.vue';
+import { message, Modal } from 'ant-design-vue';
 
 const columns = [
   {
@@ -102,15 +110,41 @@ const handleNextPage = () => {
   })
 }
 
+const handleRefreshData = () => {
+  run({cat: 'topics', limit: pageSize.value})
+}
+
+const handleDeleteTopic = (topic: string) => {
+  Modal.confirm({
+    title: 'Delete',
+    content: 'Do you want delete this topic?',
+    okText: 'Yes',
+    okType: 'danger',
+    cancelText: 'Cancel',
+    onOk: () => {
+      return new Promise<void>(async(resolve, reject) => {
+        await deleteTopic(topic)
+        run({cat: 'topics', limit: pageSize.value})
+        message.success('Delete topic succeed')
+        resolve()
+      })
+    }
+  })
+}
+
 const topicDetail = ref<null | { open: (subscribers: string) => null }>(null)
 const handleTopicDetail = (subscribers: string) => {
   topicDetail.value?.open(subscribers)
 }
 
+const topicSubscribe = ref<null | { open: (topic: string) => null }>(null)
+const handleTopicSubscribe = (topic: string) => {
+  topicSubscribe.value?.open(topic)
+}
 </script>
 
 <style lang="postcss" scoped>
-::v-deep .ant-pagination-item {
+::deep .ant-pagination-item {
   display: none;
 }
 

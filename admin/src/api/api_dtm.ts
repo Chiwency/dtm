@@ -43,6 +43,14 @@ export function deleteTopic<T>(topicName:string): Promise<AxiosResponse<T>> {
     })
 }
 
+export function addSubscriber(payload: { topic: string, url: string, remark: string}): Promise<AxiosResponse> {
+    return request({
+        url: '/api/dtmsvr/subscribe',
+        method: 'get',
+        params: payload
+    })
+}
+
 export function getTransaction<T>(payload: { gid: string }): Promise<AxiosResponse<T>> {
     return request({
         url: '/api/dtmsvr/query',
