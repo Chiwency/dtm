@@ -71,8 +71,8 @@ func Subscribe(topic, url, remark string) error {
 	return GetStore().UpdateKV(&kvs[0])
 }
 
-// UnSubscribe Unsubscribes topic
-func UnSubscribe(topic, url string) error {
+// Unsubscribe unsubscribes the topic
+func Unsubscribe(topic, url string) error {
 	if topic == "" {
 		return errors.New("empty topic")
 	}

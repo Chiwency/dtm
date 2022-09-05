@@ -28,7 +28,7 @@ export function forceStopTransaction(gid: string): Promise<AxiosResponse> {
     })
 }
 
-export function listKVPairs<T>(payload:IListAllKVReq): Promise<AxiosResponse<T>> {
+export function queryKVPair<T>(payload: { "cat": string, "key": string }): Promise<AxiosResponse<T>> {
     return request({
         url: '/api/dtmsvr/queryKV',
         method: 'get',
@@ -36,16 +36,32 @@ export function listKVPairs<T>(payload:IListAllKVReq): Promise<AxiosResponse<T>>
     })
 }
 
-export function deleteTopic<T>(topicName:string): Promise<AxiosResponse<T>> {
+export function listKVPairs<T>(payload: IListAllKVReq): Promise<AxiosResponse<T>> {
     return request({
-        url: '/api/dtmsvr/topic/'+topicName,
+        url: '/api/dtmsvr/scanKV',
+        method: 'get',
+        params: payload
+    })
+}
+
+export function deleteTopic<T>(topicName: string): Promise<AxiosResponse<T>> {
+    return request({
+        url: '/api/dtmsvr/topic/' + topicName,
         method: 'delete'
     })
 }
 
-export function addSubscriber(payload: { topic: string, url: string, remark: string}): Promise<AxiosResponse> {
+export function subscribe<T>(payload: { topic: string, url: string, remark: string }): Promise<AxiosResponse<T>> {
     return request({
         url: '/api/dtmsvr/subscribe',
+        method: 'get',
+        params: payload
+    })
+}
+
+export function unsubscribe(payload: { topic: string, url: string }): Promise<AxiosResponse> {
+    return request({
+        url: '/api/dtmsvr/unsubscribe',
         method: 'get',
         params: payload
     })

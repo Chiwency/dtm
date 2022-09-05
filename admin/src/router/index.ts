@@ -48,13 +48,13 @@ export const allowRouter: Array<IMenubarList> = [
         ]
       },{
         name: 'KVPairs',
-        path: '/admin/nodes',
+        path: '/admin/kv',
         component: Components['LayoutMain'],
         meta: { title: 'Key-Value Pairs' },
         children: [
           {
             name: 'Topics',
-            path: '/admin/nodes/living',
+            path: '/admin/kv/topics',
             component: Components['Topics'],
             meta: { title: 'Topics' },
           }

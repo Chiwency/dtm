@@ -9,7 +9,7 @@
         <template v-if="column.key === 'action'">
           <span>
               <a class="mr-2 font-medium" @click="handleTopicSubscribe(record.k)">Subscribe</a>
-              <a class="mr-2 font-medium" @click="handleTopicDetail(record.v)">Detail</a>
+              <a class="mr-2 font-medium" @click="handleTopicDetail(record.k,record.v)">Detail</a>
               <a class="text-red-400 font-medium" @click="handleDeleteTopic(record.k)">Delete</a>
           </span>
         </template>
@@ -20,17 +20,17 @@
       <a-button type="text" :disabled="!canNext" @click="handleNextPage">Next</a-button>
     </div>
 
-    <DialogTopicDetail ref="topicDetail" />
-    <DialogTopicSubscribe ref="topicSubscribe" @subscribed="handleRefreshData" />
+    <DialogTopicDetail ref="topicDetail" @unsubscribed="handleRefreshData"/>
+    <DialogTopicSubscribe ref="topicSubscribe" @subscribed="handleRefreshData"/>
   </div>
 </template>
 <script setup lang="ts">
-import { IListAllKVReq, listKVPairs, deleteTopic } from '/@/api/api_dtm'
-import { computed, ref } from 'vue-demi'
-import { usePagination } from 'vue-request'
+import {deleteTopic, IListAllKVReq, listKVPairs} from '/@/api/api_dtm'
+import {computed, ref} from 'vue-demi'
+import {usePagination} from 'vue-request'
 import DialogTopicDetail from './_Components/DialogTopicDetail.vue';
 import DialogTopicSubscribe from './_Components/DialogTopicSubscribe.vue';
-import { message, Modal } from 'ant-design-vue';
+import {message, Modal} from 'ant-design-vue';
 
 const columns = [
   {
@@ -129,9 +129,9 @@ const handleDeleteTopic = (topic: string) => {
   })
 }
 
-const topicDetail = ref<null | { open: (subscribers: string) => null }>(null)
-const handleTopicDetail = (subscribers: string) => {
-  topicDetail.value?.open(subscribers)
+const topicDetail = ref<null | { open: (topic: string, subscribers: string) => null }>(null)
+const handleTopicDetail = (topic: string, subscribers: string) => {
+  topicDetail.value?.open(topic, subscribers)
 }
 
 const topicSubscribe = ref<null | { open: (topic: string) => null }>(null)

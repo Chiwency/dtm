@@ -86,14 +86,14 @@ func TestAPIAll(t *testing.T) {
 	//fmt.Printf("pos1:%s,pos2:%s,pos3:%s", nextPos, nextPos2, nextPos3)
 }
 
-func TestAPIQueryKV(t *testing.T) {
+func TestAPIScanKV(t *testing.T) {
 	for i := 0; i < 3; i++ { // add three
 		assert.Nil(t, httpSubscribe("test_topic"+fmt.Sprintf("%d", i), "http://dtm/test1"))
 	}
 	resp, err := dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
 		"cat":   "topics",
 		"limit": "1",
-	}).Get(dtmutil.DefaultHTTPServer + "/queryKV")
+	}).Get(dtmutil.DefaultHTTPServer + "/scanKV")
 	assert.Nil(t, err)
 	m := map[string]interface{}{}
 	dtmimp.MustUnmarshalString(resp.String(), &m)
@@ -104,7 +104,7 @@ func TestAPIQueryKV(t *testing.T) {
 		"cat":      "topics",
 		"limit":    "1",
 		"position": nextPos,
-	}).Get(dtmutil.DefaultHTTPServer + "/queryKV")
+	}).Get(dtmutil.DefaultHTTPServer + "/scanKV")
 	assert.Nil(t, err)
 	dtmimp.MustUnmarshalString(resp.String(), &m)
 	nextPos2 := m["next_position"].(string)
@@ -115,7 +115,7 @@ func TestAPIQueryKV(t *testing.T) {
 		"cat":      "topics",
 		"limit":    "1000",
 		"position": nextPos,
-	}).Get(dtmutil.DefaultHTTPServer + "/queryKV")
+	}).Get(dtmutil.DefaultHTTPServer + "/scanKV")
 	assert.Nil(t, err)
 	dtmimp.MustUnmarshalString(resp.String(), &m)
 	nextPos3 := m["next_position"].(string)

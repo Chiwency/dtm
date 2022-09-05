@@ -75,7 +75,7 @@ func (s *dtmServer) Subscribe(ctx context.Context, in *pb.DtmTopicRequest) (*emp
 }
 
 func (s *dtmServer) UnSubscribe(ctx context.Context, in *pb.DtmTopicRequest) (*emptypb.Empty, error) {
-	return &emptypb.Empty{}, dtmgrpc.DtmError2GrpcError(UnSubscribe(in.Topic, in.URL))
+	return &emptypb.Empty{}, dtmgrpc.DtmError2GrpcError(Unsubscribe(in.Topic, in.URL))
 }
 
 func (s *dtmServer) DeleteTopic(ctx context.Context, in *pb.DtmTopicRequest) (*emptypb.Empty, error) {
