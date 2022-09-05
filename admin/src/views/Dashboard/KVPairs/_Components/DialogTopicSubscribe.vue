@@ -17,6 +17,7 @@
 </template>
 
 <script setup lang="ts">
+import { message } from 'ant-design-vue';
 import {reactive, ref} from 'vue';
 import { addSubscriber } from '/@/api/api_dtm'
 
@@ -50,6 +51,7 @@ const handleSubscribe = async () => {
   confirmLoading.value = true
   await addSubscriber(form)
   visible.value = false
+  message.success('Add subscriber succeed')
   confirmLoading.value = false
   emit('subscribed')
 }

@@ -117,17 +117,14 @@ const handleRefreshData = () => {
 const handleDeleteTopic = (topic: string) => {
   Modal.confirm({
     title: 'Delete',
-    content: 'Do you want delete this topic?',
+    content: 'Do you want delete this topic? ',
     okText: 'Yes',
     okType: 'danger',
     cancelText: 'Cancel',
-    onOk: () => {
-      return new Promise<void>(async(resolve, reject) => {
-        await deleteTopic(topic)
-        run({cat: 'topics', limit: pageSize.value})
-        message.success('Delete topic succeed')
-        resolve()
-      })
+    onOk: async () => {
+      await deleteTopic(topic)
+      message.success('Delete topic succeed')
+      run({cat: 'topics', limit: pageSize.value})
     }
   })
 }
