@@ -125,24 +125,23 @@ func TestAPIScanKV(t *testing.T) {
 func TestAPIQueryKV(t *testing.T) {
 	m := map[string]interface{}{}
 	// normal
-	assert.Nil(t, httpSubscribe("test_topic_query", "http://dtm/test1"))
+	assert.Nil(t, httpSubscribe("test_topic_TestAPIQueryKV", "http://dtm/test1"))
 	resp, err := dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
 		"cat": "topics",
-		"key": "test_topic_query",
+		"key": "test_topic_TestAPIQueryKV",
 	}).Get(dtmutil.DefaultHTTPServer + "/queryKV")
 	assert.Nil(t, err)
 	dtmimp.MustUnmarshalString(resp.String(), &m)
 	assert.Equal(t, 1, len(m["kv"].([]interface{})))
 
-	// query non-existent topic
+	// query non_existent topic
 	resp, err = dtmcli.GetRestyClient().R().SetQueryParams(map[string]string{
 		"cat": "topics",
-		"key": "fake_topic",
+		"key": "non_existent_topic_TestAPIQueryKV",
 	}).Get(dtmutil.DefaultHTTPServer + "/queryKV")
 	assert.Nil(t, err)
 	dtmimp.MustUnmarshalString(resp.String(), &m)
 	assert.Equal(t, 0, len(m["kv"].([]interface{})))
-
 }
 
 func TestDtmMetrics(t *testing.T) {

@@ -7,6 +7,7 @@
 package test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -66,6 +67,14 @@ func TestMsgAbnormal(t *testing.T) {
 	waitTransProcessed(msg.Gid)
 	err = msg.Prepare("")
 	assert.Error(t, err)
+}
+
+func TestMsgTopicNotFoundFailed(t *testing.T) {
+	req := busi.GenReqHTTP(30, false, false)
+	msg := dtmcli.NewMsg(dtmutil.DefaultHTTPServer, dtmimp.GetFuncName()).
+		AddTopic("non_existent_topic_TestMsgTopicNotFoundFailed", &req)
+	msg.QueryPrepared = busi.Busi + "/QueryPrepared"
+	assert.True(t, strings.Contains(msg.Submit().Error(), "topic not found"))
 }
 
 func genMsg(gid string) *dtmcli.Msg {

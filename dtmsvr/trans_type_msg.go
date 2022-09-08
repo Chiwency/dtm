@@ -23,7 +23,9 @@ func (t *transMsgProcessor) GenBranches() []TransBranch {
 	for i, step := range t.Steps {
 		mayTopic := strings.TrimPrefix(step[dtmimp.OpAction], dtmimp.MsgTopicPrefix)
 		urls := dtmimp.If(mayTopic == step[dtmimp.OpAction], []string{mayTopic}, topic2urls(mayTopic)).([]string)
-		logger.Errorf("urls:%v,mayTopic:%v,topicsMap:%v", urls, mayTopic, topicsMap)
+		if len(urls) == 0 {
+			e2p(errors.New("topic not found"))
+		}
 		for j, url := range urls {
 			b := TransBranch{
 				Gid:      t.Gid,
