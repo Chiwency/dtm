@@ -34,13 +34,6 @@ func topic2urls(topic string) []string {
 	return urls
 }
 
-//func QueryAllTopics() []Topic {
-//	kvs, err := GetStore().FindKV(topicsCat, "")
-//	if err != nil {
-//		return err
-//	}
-//}
-
 // Subscribe subscribes topic, create topic if not exist
 func Subscribe(topic, url, remark string) error {
 	if topic == "" {

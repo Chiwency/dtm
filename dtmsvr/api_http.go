@@ -129,7 +129,7 @@ func scanKV(c *gin.Context) interface{} {
 
 func queryKV(c *gin.Context) interface{} {
 	cat := c.DefaultQuery("cat", "")
-	key := c.DefaultQuery("cat", "")
+	key := c.DefaultQuery("key", "")
 
 	kv := GetStore().FindKV(cat, key)
 	return map[string]interface{}{"kv": kv}

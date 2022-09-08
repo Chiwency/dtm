@@ -63,15 +63,20 @@ func TestTopic(t *testing.T) {
 
 func testSubscribe(t *testing.T, subscribe func(topic, url string) error) {
 	assert.Nil(t, subscribe("test_topic", "http://dtm/test1"))
-	assert.Error(t, subscribe("test_topic", "http://dtm/test1"))
+	assert.Error(t, subscribe("test_topic", "http://dtm/test1")) // error:repeat subscription
+	assert.Error(t, subscribe("", "http://dtm/test1"))           // error:empty topic
+	assert.Error(t, subscribe("test_topic", ""))                 // error:empty url
 	assert.Nil(t, subscribe("test_topic", "http://dtm/test2"))
 }
 
-func testUnSubscribe(t *testing.T, unSubscribe func(topic, url string) error) {
-	assert.Nil(t, unSubscribe("test_topic", "http://dtm/test1"))
-	assert.Error(t, unSubscribe("test_topic", "http://dtm/test1"))
-	assert.Nil(t, unSubscribe("test_topic", "http://dtm/test2"))
-	assert.Error(t, unSubscribe("test_topic", "http://dtm/test2"))
+func testUnSubscribe(t *testing.T, unsubscribe func(topic, url string) error) {
+	assert.Nil(t, unsubscribe("test_topic", "http://dtm/test1"))
+	assert.Error(t, unsubscribe("test_topic", "http://dtm/test1")) // error:repeat unsubscription
+	assert.Error(t, unsubscribe("", "http://dtm/test1"))           // error:empty topic
+	assert.Error(t, unsubscribe("test_topic", ""))                 // error:empty url
+	assert.Error(t, unsubscribe("fake_topic", "http://dtm/test1")) // error:unsubscribe a non-existent topic
+	assert.Nil(t, unsubscribe("test_topic", "http://dtm/test2"))
+	assert.Error(t, unsubscribe("test_topic", "http://dtm/test2"))
 }
 
 func testDeleteTopic(t *testing.T, deleteTopic func(topic string) error) {
