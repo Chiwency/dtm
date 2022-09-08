@@ -13,13 +13,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-redis/redis/v8"
-
 	"github.com/dtm-labs/dtm/client/dtmcli/dtmimp"
 	"github.com/dtm-labs/dtm/dtmsvr/config"
 	"github.com/dtm-labs/dtm/dtmsvr/storage"
 	"github.com/dtm-labs/dtm/dtmutil"
 	"github.com/dtm-labs/logger"
+	"github.com/go-redis/redis/v8"
 )
 
 // TODO: optimize this, it's very strange to use pointer to dtmutil.Config
@@ -379,7 +378,7 @@ func (s *Store) FindKV(cat, key string) []storage.KVStore {
 		keys, _ = r.Val()
 	}
 
-	var kvs []storage.KVStore
+	kvs := []storage.KVStore{}
 	if len(keys) <= 0 {
 		return nil
 	}
